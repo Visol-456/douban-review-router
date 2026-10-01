@@ -29,7 +29,7 @@ import seaborn as sns
 from gensim.models import KeyedVectors
 
 SEED = 42
-DATA_DIR = os.environ.get("DRR_DATA_DIR", "/home/lry/router_data")
+DATA_DIR = os.environ.get("DRR_DATA_DIR", "data/desensitized")
 VEC_PATH = os.path.join(DATA_DIR, "fasttext_zh.vec")
 SUF = "_v2"
 MAX_LEN = 200
