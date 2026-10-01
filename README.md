@@ -41,6 +41,10 @@ DeepSeek 深度分析 (Tools + MCP + Skills 三能力协同)
 可视化 + 报告
 ```
 
+![分层 Agent 架构：System One 本地路由 + System Two 大模型深挖](figures/agent_architecture.png)
+
+*图 1：分层 Agent 架构——先由路由层（System One）判断评论是否可疑，不可疑的直接输出结束，只有可疑样本才分流给 DeepSeek 深挖层（System Two），调用 Tools / MCP / Skills 三能力完成分析。*
+
 ### Agent 架构的三能力协同（本课题亮点）
 
 主 agent（`src/agent/agent_chat.py`）把 **Tools / MCP / Skills** 三者串起来，
@@ -176,11 +180,33 @@ python src/agent/agent_chat.py
 | 准确率 (acc) | 0.7775 | **0.799** |
 | F1-macro | 0.7364 | **0.755** |
 
+![双轨指标对比：准确率 / 宏平均 F1 / 可疑类 F1](figures/metrics_comparison.png)
+
+*图 2：两条路线的指标对比（Y 轴自 0 起）——Qwen3-0.6B QLoRA 在准确率、宏平均 F1、可疑类 F1 三项上均略高于 LSTM 基线；灰色为多数类基线（仅准确率）。*
+
+![双轨推理性能对比：单条延迟 / 吞吐量](figures/performance_comparison.png)
+
+*图 3：同一台 GTX 1050 Ti、418 条评论下的推理性能对比——LSTM 单条 0.3ms（约 3333 条/秒），Qwen3-0.6B 单条 94.9ms（约 10.5 条/秒），LSTM 快约 316 倍。*
+
 **产出对比表**：准确率 / 单条推理耗时 / 参数量 / 大模型调用节省率。
 
 **叙事落点（克制、用数据说话）**：分析任务特性后发现这是**轻量短文本分类**，无需一律堆大模型；对比证明在保证精度的前提下，轻量 RNN 能覆盖大部分场景，大模型微调只在极端样本上体现优势。**任务特性决定选型。**
 
 关于 tokenizer 的说明：**RNN 路线不需要 transformer tokenizer**，用 jieba 分词 + 词索引即可；路线 B 才用 Qwen tokenizer。
+
+### 训练曲线与混淆矩阵
+
+![LSTM 训练曲线（最优轮次=21）](figures/lstm_train_curve.png)
+
+*图 4：LSTM 训练曲线——第 21 轮取得最优（accuracy 0.7775 / 宏平均 F1 0.7364），之后验证损失回升，呈现过拟合。*
+
+![Qwen3-0.6B QLoRA 微调曲线（3 轮）](figures/qwen_training_curve.png)
+
+*图 5：Qwen3-0.6B QLoRA 微调曲线——训练损失持续下降，验证准确率与可疑类 F1 稳步上升，3 轮内未见明显过拟合。*
+
+![LSTM 混淆矩阵（验证集 418 条）](figures/lstm_confusion_matrix.png)
+
+*图 6：LSTM 在验证集上的混淆矩阵——可疑类 F1 0.8405 明显优于普通类 0.632，模型更擅长抓出可疑评论。*
 
 ---
 
