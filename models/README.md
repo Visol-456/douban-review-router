@@ -1,8 +1,8 @@
 # 模型权重（Releases）
 
-本目录存放课题《商品评价的观点自动提取》最终发布的模型权重，**有意提交进 Git**
-（`.gitignore` 中对这两个路径做了 `!` 反排除）。训练过程中的中间 checkpoint 仍被忽略，
-不进仓库。
+本目录说明课题《商品评价的观点自动提取》最终发布的模型权重。**权重只随 GitHub Release
+（v1.0.0 附件）发布，不入 Git 树**（`.gitignore` 排除 `*.pt/*.safetensors/*.bin`），
+训练过程中的中间 checkpoint 亦不保留。
 
 ## 1. `bilstm_model.pt` — LSTM 情感/观点分类基线
 
@@ -25,11 +25,11 @@
 ## 使用方式
 
 ```python
-# LSTM 基线
+# LSTM 基线（从 Release 下载 bilstm_model.pt 放到 models/ 下）
 import torch
 state = torch.load("models/bilstm_model.pt", map_location="cpu")
 
-# Qwen3-0.6B QLoRA adapter（需先安装 peft/transformers）
+# Qwen3-0.6B QLoRA adapter（从 Release 下载 qwen_adapter_final/ 放到 models/ 下；需先安装 peft/transformers）
 from transformers import AutoModelForCausalLM, AutoTokenizer
 from peft import PeftModel
 
