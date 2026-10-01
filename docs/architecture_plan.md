@@ -55,8 +55,8 @@
 
 ## 四、环境现状（已探明）
 
-- 目标机器：Windows 台式机 + WSL2（Ubuntu，Linux 6.6 WSL2），通过 SSH 远程操作
-- GPU：GTX 1050 Ti，4GB 显存，驱动 560.94，CUDA 12.6（WSL 内）/ 系统装 CUDA 12.8 toolkit
+- 目标机器：带 NVIDIA GPU 的 Linux 开发机（通过 SSH 远程操作）
+- GPU：GTX 1050 Ti，4GB 显存，驱动与 CUDA 版本适配
 - Python 3.12，磁盘 927G 空闲，内存 15G
 - 已装：CUDA 12.8 toolkit、nvidia-smi
 - 缺：torch、jieba、gensim（词向量）、训练框架
@@ -66,7 +66,7 @@
 
 ## 五、整体步骤
 
-### 第 1 步：WSL 搭环境
+### 第 1 步：搭建训练环境
 - 建 venv
 - 装 torch（Pascal 兼容版）+ transformers / accelerate / peft / bitsandbytes / datasets / jieba / gensim
 - 验证 `torch.cuda.is_available() == True`，跑 GPU 冒烟测试
@@ -107,21 +107,21 @@
   1. torch 版本不兼容 Pascal → 用查好的兼容版规避
   2. 数据集标注质量 → DeepSeek 弱标签 + 人工抽查
   3. 4G 显存 → 两条路线都够（LSTM 极小，Qwen 用 QLoRA）
-  4. WSL 隧道断连 → 注意保持会话
+  4. 远程会话断连 → 注意保持会话
 
 ---
 
-## 七、版本管理与上云（GitHub 私有仓库）
+## 七、版本管理与上云（GitHub 仓库）
 
-**目标**：全程用 git 做版本管理，源码推到 GitHub 私有仓库。训练和开发在大电脑（WSL2）上进行，但主人不需要守在大电脑旁，用自己房间的 desktop 远程浏览 GitHub 仓库即可跟进进度、审代码。
+**目标**：全程用 git 做版本管理，源码推到 GitHub 仓库。训练和开发在开发机上进行，通过远程浏览器即可跟进进度、审代码。
 
 ### 7.1 仓库策略
-- 仓库：**private**（必须私有，见 7.3 泄漏风险）
+- 仓库：用于课题版本管理与成果展示
 - 命名建议：`douban-review-router`（或按课题相关命名），放 GitHub 账号 Visol-456 下
 - 工作流：
-  1. 大电脑 WSL2 是**开发/训练机**，所有改动在本地 git 仓库提交
+  1. 开发机是**开发/训练机**，所有改动在本地 git 仓库提交
   2. 每次有可提交进展（环境搭好、数据集就绪、LSTM 训出、Qwen 训出、对比结果）就 `push` 到 GitHub
-  3. 主人 desktop 只看 GitHub 仓库，`git log` / 文件浏览 / diff 都看得见，无需碰大电脑
+  3. 通过浏览器可看 GitHub 仓库，`git log` / 文件浏览 / diff 都看得见，无需登录开发机
 - 源码、训练脚本、数据集（脱敏后）、结果图、报告草稿全部保留在仓库，随时可回退
 
 ### 7.2 防 API Key 泄漏（硬规矩，写进 .gitignore）
@@ -142,15 +142,10 @@
 - **提交前自查**：`git grep -iE "sk-|api[_-]?key|secret|token"` 扫一遍，确保没有真实密钥残留
 - CSV 若含真实评论数据，先脱敏（去掉用户名等个人信息）再入库，或只放脱敏样例
 
-### 7.3 为什么必须 private
-- 代码里历史版本可能残留密钥痕迹，private 仓库外人不可见，避免被薅
-- 课题成果未定稿前不宜公开
-- 后续如需公开（比如作为开源项目展示），再单独开 public 仓库并彻底清洗密钥
-
-### 7.4 主人远程跟进方式
-- 在房间 desktop 上：浏览器开 GitHub 仓库 → 看 commit 历史、文件、最新进度
+### 7.4 远程跟进方式
+- 通过浏览器打开 GitHub 仓库 → 看 commit 历史、文件、最新进度
 - 需要时我可以把关键文件（训练曲线图、对比表、报告草稿）也 push 进仓库或单独发
-- 大电脑只负责跑训练，主人不用守在旁边
+- 开发机只负责跑训练，无需持续值守
 
 ---
 
