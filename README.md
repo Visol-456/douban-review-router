@@ -234,7 +234,7 @@ python src/agent/agent_chat.py
 - [x] 路线 A：LSTM 基线训练出结果（acc 0.7775 / F1 0.7364）
 - [x] 路线 B：Qwen3-0.6B QLoRA 微调出结果（acc 0.799 / F1 0.755）
 - [x] **Agent 架构升级：Tools + MCP + Skills 三能力协同**（查电影口碑、模型自主搜索、专家知识注入）
-- [ ] 双轨对比表 + loss 曲线 + 报告定稿
-- [ ] Router 接入 MCP agent 框架，统计大模型调用节省率
+- [x] 双轨对比表 + loss 曲线 + 报告定稿
+- [x] Router 接入 MCP agent 框架，统计大模型调用节省率
 
 详细方案见 [`docs/architecture_plan.md`](docs/architecture_plan.md)。
