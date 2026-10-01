@@ -78,8 +78,8 @@ douban-review-router/
 │   │   ├── merge_all.py
 │   │   └── split_dataset.py
 │   ├── router/             # 【双轨路由层】
-│   │   ├── lstm_baseline.py    # 路线 A（骨架，待训练）
-│   │   └── qwen_finetune.py    # 路线 B（骨架，待训练）
+│   │   ├── lstm_baseline.py    # 路线 A：LSTM 基线（真实训练脚本，已验证）
+│   │   └── qwen_finetune.py    # 路线 B：Qwen3-0.6B QLoRA 微调（真实训练脚本，已验证）
 │   └── agent/              # MCP 工具层 + 交互 agent（Tools/MCP/Skills 协同）
 │       ├── mcp_server.py   # MCP server: run_python_code + search_movie_info(查豆瓣口碑)
 │       └── agent_chat.py   # 主 agent 循环: MCP 工具 + DeepSeek/Metaso 搜索 + Skill 注入
@@ -133,8 +133,9 @@ python src/data_prep/split_dataset.py     # 8:2 分层划分 → data/desensitiz
 ### 4. 训练双轨路由
 
 ```bash
-python src/router/lstm_baseline.py        # 路线 A（骨架，训练逻辑待补）
-python src/router/qwen_finetune.py        # 路线 B（骨架，训练逻辑待补）
+# 需预置 data/desensitized/{train,valid}.csv 与 fastText 中文词向量
+python src/router/lstm_baseline.py        # 路线 A：LSTM 基线（jieba 分词 + 预训练词向量 + BiLSTM）
+python src/router/qwen_finetune.py        # 路线 B：Qwen3-0.6B QLoRA 微调（4bit，FP32，Pascal 兼容）
 ```
 
 ### 5. 运行 Agent（Tools + MCP + Skills）
