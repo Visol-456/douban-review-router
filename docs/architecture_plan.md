@@ -160,3 +160,85 @@
 2. 数据集用现有豆瓣评论 + DeepSeek 弱标签，行吗？
 3. 报告保留原"双角色评估"作深度层，行吗？
 4. LSTM 用 jieba 分词 + gensim 词向量（经典做法，报告正规），认可吗？
+
+---
+
+## 九、Agent 架构升级：Tools / MCP / Skills 三能力（本次新增）
+
+在原「Router → 只分流可疑样本 → 大模型深挖」的基础上，主 agent
+（`src/agent/agent_chat.py`）新增三大能力，让深度分析从「模型裸猜」升级为
+「**先查真实口碑，再结合文本判断**」。三者的分工：
+
+```
+                    ┌───────────────────────────────┐
+   用户/评论  ────► │  主 Agent (agent_chat.py)        │
+                    │  system prompt = 基础 + Skill    │
+                    └───────────────┬───────────────┘
+                                    │ 自主决定调用哪个工具
+              ┌─────────────────────┼──────────────────────┐
+              ▼                     ▼                      ▼
+        【MCP 工具】           【Tools 搜索】           【Skills 知识】
+   search_movie_info      deepseek_web_search       movie_review_analyst.md
+   run_python_code        metaso_search             （注入 system prompt）
+   （FastMCP stdio）        （function tools）
+              │                     │
+              └──────► 真实口碑基准 ◄┘
+                          │
+                          ▼
+              模型判断：可疑 0/1 + 依据
+```
+
+### 9.1 MCP：可执行工具（含查电影口碑）
+
+- **落点**：`src/agent/mcp_server.py`，用 FastMCP 起一个 stdio 服务，`agent_chat.py` 通过
+  `mcp.client.stdio.stdio_client` 拉起并 `session.list_tools()` 拿到工具清单。
+- **工具 1 `search_movie_info(movie_title)`**：调用豆瓣移动端 rexxar 搜索接口
+  `GET https://m.douban.com/rexxar/api/v2/search?q=<title>&type=movie`，
+  解析 `subjects.items[].target`，返回**片名 / 年份 / 类型主创 / 豆瓣评分 / 评分人数 / 豆瓣ID**。
+  这是给模型判断评论可信度的**外部真实口碑基准**（例如「狂飙」8.5 分、107 万人评）。
+  匿名接口，不涉及任何密钥。
+- **工具 2 `run_python_code(code)`**：模型可写 Python 做数据清洗/统计。
+- **工具转换**：`_convert_tool()` 把 MCP 工具对象转成 OpenAI function-calling 的
+  `{"type":"function","function":{name,description,parameters}}` 结构，与 Tools 合并成一份 tools 列表。
+
+### 9.2 Tools：模型自主调用的联网搜索
+
+保留原有 **OpenAI 兼容 `chat.completions` + `tools` 循环**（`tool_choice="auto"`、流式解析
+`delta.tool_calls`），并新增两个 function tools 供模型自主调用：
+
+- **`deepseek_web_search(query)`**：接入 **DeepSeek Responses API 自带的服务端联网搜索**。
+  请求 `POST {BASE_URL}/v1/responses`，`tools=[{"type":"web_search"}]`，
+  并加护栏 `max_tool_calls=3` + `reasoning.effort=low`，避免多轮搜索烧上下文。
+  返回模型搜索后的带链接结论。
+- **`metaso_search(query)`**：秘塔 Metaso 第三方搜索兜底
+  （`POST https://metaso.cn/api/v1/search`，`Authorization: Bearer $METASO_API_KEY`），
+  返回 `webpages[]` 的标题/链接/摘要。
+
+**执行分发**：工具调用时，`deepseek_web_search` / `metaso_search` 走本地
+`_EXTRA_TOOL_HANDLERS`，其余（MCP 工具）走 `session.call_tool()`。结果以 `role:"tool"`
+消息回灌，模型继续推理，直到不再发起工具调用。
+
+### 9.3 Skills：注入领域专家知识
+
+- **落点**：`skills/movie_review_analyst.md`（「影评分析专家」skill）。
+- **内容**：反讽/阴阳怪气识别、水军刷分识别、**结合真实口碑对照判断**、
+  极端情绪/引战/AI 生成识别，以及标准工作流（提取可核验主张 → 调用外部查询 →
+  逐维度打分 → 输出 `suspicion` / `needs_deep_dive` / `reason`）。
+- **注入方式**：`_build_system_prompt()` 在每次会话启动时读取该文件，拼进
+  `system_prompt` 的「注入的领域专家 Skill」区块，`messages[0]` 即为 system prompt。
+  报告可写：**「系统通过 Skills 注入领域专家知识」**。
+
+### 9.4 端到端流程（一条评论进来）
+
+1. Router（LSTM / Qwen）判定该评论是否可疑 → 命中才进深挖。
+2. 主 Agent 收到评论 + Skill 注入的判定准则。
+3. 模型**先调用 `search_movie_info`**（或 `deepseek_web_search` / `metaso_search`）查该片真实口碑。
+4. 把「评论文本」与「真实口碑」对照，按 Skill 准则给出可疑度与依据。
+5. 输出结构化结论（可疑 0/1 + reason）。
+
+### 9.5 防泄漏
+
+- 新增代码全部 `os.environ.get(...)` 读密钥：`DEEPSEEK_API_KEY` / `METASO_API_KEY` /
+  `DEEPSEEK_SEARCH_MODEL`，**无任何硬编码**。
+- 豆瓣搜索为匿名公开接口，不带密钥。
+- 提交前 `git grep` 扫描确认无泄漏。

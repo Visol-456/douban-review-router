@@ -20,4 +20,5 @@ accelerate>=0.33
 datasets>=2.20
 
 # ---------- agent layer (MCP) ----------
-mcp>=1.0
+# mcp 2.x renamed FastMCP -> MCPServer; the agent layer targets the v1 API.
+mcp>=1.0,<2
