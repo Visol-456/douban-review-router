@@ -1,0 +1,23 @@
+# ---------- data collection ----------
+requests>=2.31.0
+
+# ---------- weak labeling / deep analysis ----------
+openai>=1.30.0
+
+# ---------- route A: LSTM baseline ----------
+# NOTE: on Pascal GPUs (GTX 1050 Ti, sm_61) install a CUDA 12.x torch build (2.4~2.6).
+# See https://pytorch.org/get-started/previous-versions/
+torch>=2.4
+numpy>=1.26
+jieba>=0.42.1
+gensim>=4.3.2
+
+# ---------- route B: Qwen QLoRA fine-tune ----------
+transformers>=4.44
+peft>=0.11
+bitsandbytes>=0.43
+accelerate>=0.33
+datasets>=2.20
+
+# ---------- agent layer (MCP) ----------
+mcp>=1.0

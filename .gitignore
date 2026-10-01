@@ -1,0 +1,57 @@
+# ============================================================
+#  Secrets - NEVER commit any of these
+# ============================================================
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+*secret*
+*credential*
+secrets/
+config.local.*
+config.*.yaml
+
+# ============================================================
+#  Raw / intermediate data (contains reviewer names -> PII)
+# ============================================================
+data/raw/
+data/interim/
+data/*.csv
+!data/desensitized/
+!data/desensitized/*.csv
+
+# ============================================================
+#  Model weights & training outputs (too large for git)
+# ============================================================
+*.pt
+*.pth
+*.safetensors
+*.bin
+*.ckpt
+*.onnx
+*.gguf
+models/
+checkpoints/
+outputs/
+lora_adapter/
+results/figures/*.png
+
+# ============================================================
+#  Python
+# ============================================================
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+env/
+*.egg-info/
+.pytest_cache/
+.ipynb_checkpoints/
+
+# ============================================================
+#  Misc
+# ============================================================
+.DS_Store
+*.log
+Thumbs.db
