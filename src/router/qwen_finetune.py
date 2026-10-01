@@ -32,10 +32,10 @@ os.environ.setdefault("HF_ENDPOINT", "https://hf-mirror.com")
 os.environ.setdefault("TOKENIZERS_PARALLELISM", "false")
 os.environ.setdefault("PYTORCH_CUDA_ALLOC_CONF", "expandable_segments:True")
 
-OUT = os.environ.get("DRR_QLORA_OUT", "/home/lry/router_qlora_out")
+OUT = os.environ.get("DRR_QLORA_OUT", "outputs/qlora")
 os.makedirs(OUT, exist_ok=True)
 MODEL_ID = os.environ.get("MODEL_ID", "Qwen/Qwen3-0.6B")
-DATA_DIR = os.environ.get("DRR_DATA_DIR", "/home/lry/router_data")
+DATA_DIR = os.environ.get("DRR_DATA_DIR", "data/desensitized")
 
 print("torch", torch.__version__, "cuda", torch.cuda.is_available(),
       torch.cuda.get_device_name(0) if torch.cuda.is_available() else None, flush=True)
