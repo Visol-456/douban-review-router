@@ -22,7 +22,12 @@ data/*.csv
 !data/desensitized/*.csv
 
 # ============================================================
-#  Model weights & training outputs (too large for git)
+#  Model weights & training outputs
+#  Large training artifacts stay OUT of git. The final RELEASED
+#  weights are committed on purpose (see models/README.md):
+#    models/bilstm_model.pt
+#    models/qwen_adapter_final/adapter_model.safetensors
+#  Negation rules must come AFTER the ignore rules to work.
 # ============================================================
 *.pt
 *.pth
@@ -31,11 +36,14 @@ data/*.csv
 *.ckpt
 *.onnx
 *.gguf
-models/
 checkpoints/
 outputs/
 lora_adapter/
 results/figures/*.png
+
+# Explicitly released model artifacts (do not remove these negations)
+!models/bilstm_model.pt
+!models/qwen_adapter_final/*.safetensors
 
 # ============================================================
 #  Python
